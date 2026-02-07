@@ -1,0 +1,135 @@
+URL Shortener - How It Works (Code Wise)
+
+---------------------------------------
+1) Model (shortener/models.py)
+---------------------------------------
+The ShortUrl model stores:
+- full_url : original long URL
+- short_url : generated short code
+- click_count : how many times short URL is clicked
+
+Code:
+class ShortUrl(models.Model):
+    full_url = models.URLField()
+    short_url = models.CharField(max_length=10, unique=True, blank=True)
+    click_count = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if not self.short_url:
+            self.short_url = generate_short_code()
+        super().save(*args, **kwargs)
+
+How it works:
+- When a new ShortUrl object is created, save() is called.
+- If short_url is empty, generate_short_code() creates a random code.
+- The object is saved to the database.
+
+---------------------------------------
+2) Code to generate short code (shortener/utils.py)
+---------------------------------------
+Code:
+import string
+import random
+
+def generate_short_code(length=6):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
+
+How it works:
+- Creates a 6-character random string using letters and numbers.
+- Example output: a1B9kL
+
+---------------------------------------
+3) Home view (shortener/views.py)
+---------------------------------------
+Code:
+def home(request):
+    short_url = None
+
+    if request.method == "POST":
+        full_url = request.POST.get("full_url")
+        obj = ShortUrl.objects.create(full_url=full_url)
+        short_url = request.build_absolute_uri(f'/{obj.short_url}')
+
+    return render(request, "shortener/home.html", {"short_url": short_url})
+
+How it works:
+- User submits a URL via form (POST request).
+- A new ShortUrl object is created.
+- Django automatically generates short_url inside save().
+- short_url is returned as a full link:
+  http://127.0.0.1:8000/a1B9kL
+
+---------------------------------------
+4) Redirect view (shortener/views.py)
+---------------------------------------
+Code:
+def redirect_url(request, short_code):
+    obj = get_object_or_404(ShortUrl, short_url=short_code)
+    obj.click_count += 1
+    obj.save()
+    return redirect(obj.full_url)
+
+How it works:
+- When user visits /<short_code>, this view runs.
+- It finds the object using short_code.
+- Increases click_count by 1.
+- Redirects user to original full_url.
+
+---------------------------------------
+5) URL routing (shortener/urls.py)
+---------------------------------------
+Code:
+urlpatterns = [
+    path('', home, name='home'),
+    path('<str:short_code>/', redirect_url, name='redirect-url'),
+]
+
+How it works:
+- '' route = homepage
+- '<short_code>/' route = redirect view
+
+---------------------------------------
+6) Main URL config (urlshortener/urls.py)
+---------------------------------------
+Code:
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('shortener.urls')),
+]
+
+How it works:
+- Connects the shortener app URLs to the main project.
+
+---------------------------------------
+7) Template (home.html)
+---------------------------------------
+Code:
+<form method="POST">
+    {% csrf_token %}
+    <input type="url" name="full_url" placeholder="Enter URL" required>
+    <button type="submit">Shorten</button>
+</form>
+
+{% if short_url %}
+    <p>Short URL: <a href="{{ short_url }}">{{ short_url }}</a></p>
+{% endif %}
+
+How it works:
+- User enters URL and clicks Shorten.
+- Short link is displayed after form submission.
+
+---------------------------------------
+Full Flow Summary
+---------------------------------------
+1. User opens homepage.
+2. User enters long URL and clicks "Shorten".
+3. Home view creates ShortUrl object.
+4. Model auto generates short_code.
+5. Short URL is shown to user.
+6. User clicks short URL.
+7. Redirect view finds original URL.
+8. Click count increases.
+9. User is redirected to original URL.
+
+End of document.
