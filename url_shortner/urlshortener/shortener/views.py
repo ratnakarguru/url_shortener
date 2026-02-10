@@ -80,6 +80,18 @@ def signup(request):
 
 @login_required(login_url='login')
 def dashboard(request):
+    # 1. Handle Link Creation (POST request)
+    if request.method == "POST":
+        full_url = request.POST.get("full_url")
+        if full_url:
+            # Create object, assign to user, and save
+            obj = ShortUrl(full_url=full_url)
+            obj.user = request.user
+            obj.save()
+            # Reload the page to show the new link
+            return redirect('dashboard')
+
+    # 2. Handle Displaying Links (GET request)
     user_links = ShortUrl.objects.filter(user=request.user).order_by('-created_at')
     total_clicks = sum(link.click_count for link in user_links)
 
