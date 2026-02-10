@@ -14,7 +14,6 @@ def home(request):
         # Create the short URL object
         if full_url:
             obj = ShortUrl.objects.create(full_url=full_url)
-            # Build the full clickable link (e.g., http://127.0.0.1:8000/AbCdE)
             short_url = request.build_absolute_uri(f'/{obj.short_url}')
 
     return render(request, "shortener/home.html", {"short_url": short_url})
@@ -31,16 +30,11 @@ def login_view(request):
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
-            # Success: Log the user in
             auth_login(request, user)
             return redirect('dashboard')
         else:
-            # Failure: Send error and keep them on the login page
             messages.error(request, "Invalid email or password.")
-            # FIX: Added 'shortener/' to the path so it finds the template
             return render(request, 'shortener/login.html')
-
-    # 2. Handle the GET request (Show the empty login page)
     return render(request, 'shortener/login.html')
 
 
@@ -80,15 +74,12 @@ def signup(request):
 
 @login_required(login_url='login')
 def dashboard(request):
-    # 1. Handle Link Creation (POST request)
     if request.method == "POST":
         full_url = request.POST.get("full_url")
         if full_url:
-            # Create object, assign to user, and save
             obj = ShortUrl(full_url=full_url)
             obj.user = request.user
             obj.save()
-            # Reload the page to show the new link
             return redirect('dashboard')
 
     # 2. Handle Displaying Links (GET request)
