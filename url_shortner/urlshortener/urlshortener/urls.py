@@ -21,7 +21,8 @@ from shortener import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', views.login_view, name='login'),
-    path('signup/',views.signup,name='signup'),
+    path('signup/',views.signup, name='signup'),
+    path('dashboard/',views.dashboard, name='dashboard'),
     path('', include('shortener.urls')),
     
 ]

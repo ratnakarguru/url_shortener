@@ -1,86 +1,99 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import ShortUrl
 from django.contrib.auth.models import User
-from django.contrib.auth import login
 from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login 
+from .models import ShortUrl
+from django.contrib.auth.decorators import login_required
 
+# --- HOME VIEW ---
 def home(request):
     short_url = None
 
     if request.method == "POST":
         full_url = request.POST.get("full_url")
-        obj = ShortUrl.objects.create(full_url=full_url)
-        short_url = request.build_absolute_uri(f'/{obj.short_url}')
+        # Create the short URL object
+        if full_url:
+            obj = ShortUrl.objects.create(full_url=full_url)
+            # Build the full clickable link (e.g., http://127.0.0.1:8000/AbCdE)
+            short_url = request.build_absolute_uri(f'/{obj.short_url}')
 
     return render(request, "shortener/home.html", {"short_url": short_url})
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login 
-from django.contrib import messages
 
+# --- LOGIN VIEW ---
 def login_view(request):
     # 1. Handle the POST request (When user clicks "Sign In")
     if request.method == 'POST':
-        # Get data from the HTML input fields
         email = request.POST.get('email')
         password = request.POST.get('password')
+        
+        # Authenticate using email as the username
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
-            # Success: Log the user in and create a session
+            # Success: Log the user in
             auth_login(request, user)
-            return redirect('home') # Change 'home' to your actual homepage URL name
+            return redirect('dashboard')
         else:
-            # Failure: Send an error message back to the page
+            # Failure: Send error and keep them on the login page
             messages.error(request, "Invalid email or password.")
-            return render(request, 'login.html')
+            # FIX: Added 'shortener/' to the path so it finds the template
+            return render(request, 'shortener/login.html')
 
-    # 3. Handle the GET request (Show the empty login page)
+    # 2. Handle the GET request (Show the empty login page)
     return render(request, 'shortener/login.html')
 
 
+# --- SIGNUP VIEW ---
 def signup(request):
     if request.method == "POST":
-        # 1. Get the data from the form
         full_name = request.POST.get('name')
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # 2. Validation: Check if email already exists
+
         if User.objects.filter(username=email).exists():
             messages.error(request, "That email is already registered.")
             return render(request, 'shortener/signup.html')
 
-        # 3. Validation: Basic password check
         if len(password) < 8:
             messages.error(request, "Password must be at least 8 characters long.")
             return render(request, 'shortener/signup.html')
 
-        # 4. Create the User
+
         try:
+
             user = User.objects.create_user(username=email, email=email, password=password)
             user.first_name = full_name
             user.save()
-            # 5. Auto-login the user immediately
-            login(request, user)
-            # 6. Redirect to home
+            
+            auth_login(request, user)
+            
             messages.success(request, "Account created successfully!")
-            return redirect('home')
+            return redirect('dashboard')
 
         except Exception as e:
             messages.error(request, "Something went wrong. Please try again.")
             return render(request, 'shortener/signup.html')
 
-    # GET Request: Just show the form
     return render(request, 'shortener/signup.html')
 
+@login_required(login_url='login')
+def dashboard(request):
+    user_links = ShortUrl.objects.filter(user=request.user).order_by('-created_at')
+    total_clicks = sum(link.click_count for link in user_links)
 
+    context = {
+        'urls': user_links,
+        'total_clicks': total_clicks,
+        'total_links': user_links.count()
+    }
+    
+    return render(request, 'shortener/dashboard.html', context)
 
+# --- REDIRECT VIEW ---
 def redirect_url(request, short_code):
     obj = get_object_or_404(ShortUrl, short_url=short_code)
-
-    # Increment click count
     obj.click_count += 1
     obj.save()
-
     return redirect(obj.full_url)
