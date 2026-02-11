@@ -4,6 +4,9 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login 
 from .models import ShortUrl
 from django.contrib.auth.decorators import login_required
+import qrcode
+from io import BytesIO
+from django.http import HttpResponse
 
 # --- HOME VIEW ---
 def home(request):
@@ -45,7 +48,6 @@ def signup(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-
         if User.objects.filter(username=email).exists():
             messages.error(request, "That email is already registered.")
             return render(request, 'shortener/signup.html')
@@ -53,10 +55,7 @@ def signup(request):
         if len(password) < 8:
             messages.error(request, "Password must be at least 8 characters long.")
             return render(request, 'shortener/signup.html')
-
-
         try:
-
             user = User.objects.create_user(username=email, email=email, password=password)
             user.first_name = full_name
             user.save()
@@ -93,6 +92,27 @@ def dashboard(request):
     }
     
     return render(request, 'shortener/dashboard.html', context)
+def generate_qr(request, short_code):
+    # 1. Build the full URL (e.g., http://127.0.0.1:8000/AbCd1)
+    full_link = f"{request.scheme}://{request.get_host()}/{short_code}"
+    
+    # 2. Create the QR Code
+    qr = qrcode.QRCode(
+        version=1,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(full_link)
+    qr.make(fit=True)
+
+    # 3. Create an image from the QR Code (Black on White)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # 4. Save image to a memory buffer (not to hard disk)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    
+    return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 # --- REDIRECT VIEW ---
 def redirect_url(request, short_code):
