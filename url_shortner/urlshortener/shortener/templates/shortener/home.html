@@ -1,5 +1,7 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,27 +9,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 relative">
 
     <header class="absolute top-0 left-0 w-full p-6 flex justify-between items-center">
-        
-        <a href="/" class="flex items-center gap-2 group">
-            <div class="bg-indigo-600 text-white p-2 rounded-lg group-hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-                </svg>
+        <a href="/" class="flex items-center gap-3 group">
+            <div
+                class="bg-white rounded-lg group-hover:scale-105 transition-transform duration-200 overflow-hidden shadow-sm">
+                <img src="{% static 'shortener/linklylogo.png' %}" alt="Linkly Logo" class="h-12 w-auto object-contain">
             </div>
-            <span class="text-xl font-bold text-slate-800 tracking-tight">ShortUrl</span>
+            <span class="text-2xl font-black text-slate-800 tracking-tight">Linkly</span>
         </a>
 
         <div class="flex items-center gap-4">
             <a href="/login" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">
                 Log in
             </a>
-            <a href="/signup" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg active:scale-95">
+            <a href="/signup"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg active:scale-95">
                 Sign up
             </a>
         </div>
@@ -37,7 +41,9 @@
         <div class="text-center mb-8">
             <div class="inline-block p-3 bg-indigo-100 rounded-lg mb-4">
                 <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                    </path>
                 </svg>
             </div>
             <h1 class="text-3xl font-bold text-slate-800">URL Shortener</h1>
@@ -47,11 +53,11 @@
         <form method="POST" class="space-y-4">
             {% csrf_token %}
             <div>
-                <input type="url" name="full_url" 
+                <input type="url" name="full_url"
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-600"
                     placeholder="https://example.com/very-long-link" required>
             </div>
-            <button type="submit" 
+            <button type="submit"
                 class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg shadow-indigo-200">
                 Shorten Link
             </button>
@@ -61,12 +67,14 @@
         <div class="mt-8 pt-6 border-t border-slate-100">
             <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Your shortened link</p>
             <div class="flex items-center gap-2 bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                <input id="shortUrl" type="text" readonly value="{{ short_url }}" 
+                <input id="shortUrl" type="text" readonly value="{{ short_url }}"
                     class="bg-transparent border-none text-indigo-700 font-medium w-full focus:ring-0">
-                <button onclick="copyToClipboard()" 
+                <button onclick="copyToClipboard()"
                     class="bg-white p-2 rounded-md shadow-sm hover:bg-slate-50 transition-colors text-indigo-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                        </path>
                     </svg>
                 </button>
             </div>
@@ -79,13 +87,14 @@
         function copyToClipboard() {
             const copyText = document.getElementById("shortUrl");
             copyText.select();
-            copyText.setSelectionRange(0, 99999); 
+            copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
-            
+
             const status = document.getElementById("copyStatus");
             status.classList.remove('hidden');
             setTimeout(() => status.classList.add('hidden'), 2000);
         }
     </script>
 </body>
+
 </html>
